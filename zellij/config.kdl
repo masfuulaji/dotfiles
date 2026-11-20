@@ -1,0 +1,250 @@
+// =============================================================================
+// ZELLIJ CONFIGURATION FOR NEOVIM USERS
+// =============================================================================
+// Features:
+// - theme "tokyo-night-storm": Seamless match with Alacritty and LazyVim palette.
+// - default_mode "locked": Zellij starts locked so Neovim receives ALL keystrokes.
+// - Ctrl+a prefix: Tmux/0rtz-style leader key to trigger Zellij actions.
+// - pane_frames false: Removes border clutter for clean Neovim splits.
+// - scrollback_editor "nvim": Opens scrollback buffers in Neovim (WSL).
+// - Auto-lock on action: Multiplexer actions return automatically to locked mode.
+// - Ctrl+a then Ctrl+a: Passes literal Ctrl+a through to terminal.
+// - Ctrl+a then a: Toggles between active and previous tab.
+// =============================================================================
+
+theme "tokyo-night-storm"
+default_mode "locked"
+pane_frames false
+scrollback_editor "nvim"
+default_shell "C:/Program Files/Git/bin/bash.exe"
+show_startup_tips false
+show_release_notes false
+copy_on_select true
+copy_clipboard "system"
+styled_underlines true
+support_kitty_keyboard_protocol true
+
+keybinds clear-defaults=true {
+    // -------------------------------------------------------------------------
+    // LOCKED MODE (Default)
+    // Neovim receives ALL keystrokes untouched.
+    // Zellij only listens for "Ctrl a" to activate tmux/leader mode.
+    // -------------------------------------------------------------------------
+    locked {
+        bind "Ctrl a" { SwitchToMode "tmux"; }
+    }
+
+    // -------------------------------------------------------------------------
+    // NORMAL MODE
+    // Fallback mode if a pane or plugin closes. Allows Ctrl+a to always work.
+    // -------------------------------------------------------------------------
+    normal {
+        bind "Ctrl a" { SwitchToMode "tmux"; }
+        bind "Esc" { SwitchToMode "locked"; }
+    }
+
+    // -------------------------------------------------------------------------
+    // TMUX MODE (0rtz-style Leader Mode, entered via Ctrl+a)
+    // -------------------------------------------------------------------------
+    tmux {
+        // Exit leader without action back to Neovim (locked)
+        bind "Esc" "q" "Ctrl c" { SwitchToMode "locked"; }
+
+        // Send Ctrl+a to the terminal (e.g. Vim increment number motion)
+        bind "Ctrl a" { Write 1; SwitchToMode "locked"; }
+
+        // Panes Focus (Vim hjkl & arrows) -> returns to locked
+        bind "h" "Left"  { MoveFocus "Left"; SwitchToMode "locked"; }
+        bind "l" "Right" { MoveFocus "Right"; SwitchToMode "locked"; }
+        bind "k" "Up"    { MoveFocus "Up"; SwitchToMode "locked"; }
+        bind "j" "Down"  { MoveFocus "Down"; SwitchToMode "locked"; }
+
+        // Move Panes (Shift + hjkl) -> returns to locked
+        bind "Shift h" "H" { MovePane "Left"; SwitchToMode "locked"; }
+        bind "Shift l" "L" { MovePane "Right"; SwitchToMode "locked"; }
+        bind "Shift k" "K" { MovePane "Up"; SwitchToMode "locked"; }
+        bind "Shift j" "J" { MovePane "Down"; SwitchToMode "locked"; }
+
+        // Splits (Vim & Tmux style without Yazi) -> returns to locked
+        bind "v" "%" { NewPane "Right"; SwitchToMode "locked"; }
+        bind "s" "\"" { NewPane "Down"; SwitchToMode "locked"; }
+        bind "n" { NewPane "stacked"; SwitchToMode "locked"; }
+        bind "o" { NewPane; SwitchToMode "locked"; }
+
+        // Pane Controls -> returns to locked
+        bind "x" { SwitchToMode "locked"; CloseFocus; }
+        bind "z" { ToggleFocusFullscreen; SwitchToMode "locked"; }
+        bind "Shift r" { SwitchToMode "RenamePane"; PaneNameInput 0; }
+        bind "g" { NextSwapLayout; SwitchToMode "locked"; }
+        bind "." { ToggleFloatingPanes; SwitchToMode "locked"; }
+        bind ">" { TogglePaneEmbedOrFloating; SwitchToMode "locked"; }
+        bind "Ctrl r" { SwitchToMode "Resize"; }
+
+        // Tabs
+        bind "a" { ToggleTab; SwitchToMode "locked"; }
+        bind "t" { NewTab; SwitchToMode "locked"; }
+        bind "Ctrl t" { SwitchToMode "Tab"; }
+        bind "1" { GoToTab 1; SwitchToMode "locked"; }
+        bind "2" { GoToTab 2; SwitchToMode "locked"; }
+        bind "3" { GoToTab 3; SwitchToMode "locked"; }
+        bind "4" { GoToTab 4; SwitchToMode "locked"; }
+        bind "5" { GoToTab 5; SwitchToMode "locked"; }
+        bind "6" { GoToTab 6; SwitchToMode "locked"; }
+        bind "7" { GoToTab 7; SwitchToMode "locked"; }
+        bind "8" { GoToTab 8; SwitchToMode "locked"; }
+        bind "9" { GoToTab 9; SwitchToMode "locked"; }
+        bind "r" { SwitchToMode "RenameTab"; TabNameInput 0; }
+        bind "Shift x" { SwitchToMode "locked"; CloseTab; }
+
+        // Buffer & Scrollback
+        bind "Ctrl l" { Clear; SwitchToMode "locked"; }
+        bind "f" "e" { EditScrollback { ansi true; }; SwitchToMode "locked"; }
+        bind "/" { SwitchToMode "EnterSearch"; SearchInput 0; }
+        bind "Ctrl d" "d" "[" { SwitchToMode "Scroll"; }
+
+        // Plugins / Session
+        bind "w" {
+            LaunchOrFocusPlugin "session-manager" {
+                floating true
+                move_to_focused_tab true
+            }
+            SwitchToMode "locked"
+        }
+        bind "p" {
+            LaunchOrFocusPlugin "zellij:plugin-manager" {
+                floating true
+                move_to_focused_tab true
+            }
+            SwitchToMode "locked"
+        }
+    }
+
+    // -------------------------------------------------------------------------
+    // RENAME PANE MODE
+    // -------------------------------------------------------------------------
+    renamepane {
+        bind "Enter" { SwitchToMode "locked"; }
+        bind "Ctrl a" "Esc" "Ctrl c" { UndoRenamePane; SwitchToMode "locked"; }
+    }
+
+    // -------------------------------------------------------------------------
+    // RESIZE MODE
+    // -------------------------------------------------------------------------
+    resize {
+        bind "Ctrl a" "q" "Esc" "Ctrl c" "Ctrl r" "Enter" { SwitchToMode "locked"; }
+        bind "h" "Left"  { Resize "Increase Left"; }
+        bind "j" "Down"  { Resize "Increase Down"; }
+        bind "k" "Up"    { Resize "Increase Up"; }
+        bind "l" "Right" { Resize "Increase Right"; }
+        bind "H" { Resize "Decrease Left"; }
+        bind "J" { Resize "Decrease Down"; }
+        bind "K" { Resize "Decrease Up"; }
+        bind "L" { Resize "Decrease Right"; }
+        bind "=" "+" { Resize "Increase"; }
+        bind "-"     { Resize "Decrease"; }
+    }
+
+    // -------------------------------------------------------------------------
+    // TAB MODE
+    // -------------------------------------------------------------------------
+    tab {
+        bind "Ctrl a" "Enter" "Esc" "q" "Ctrl c" { SwitchToMode "locked"; }
+        bind "h" "Left" "Up" "k" { GoToPreviousTab; }
+        bind "Shift h" { MoveTab "Left"; }
+        bind "l" "Right" "Down" "j" { GoToNextTab; }
+        bind "Shift l" { MoveTab "Right"; }
+        bind "t" "n" { NewTab; SwitchToMode "locked"; }
+        bind "x" { SwitchToMode "locked"; CloseTab; }
+        bind "r" { SwitchToMode "RenameTab"; TabNameInput 0; }
+        bind "s" { ToggleActiveSyncTab; SwitchToMode "locked"; }
+        bind "1" { GoToTab 1; SwitchToMode "locked"; }
+        bind "2" { GoToTab 2; SwitchToMode "locked"; }
+        bind "3" { GoToTab 3; SwitchToMode "locked"; }
+        bind "4" { GoToTab 4; SwitchToMode "locked"; }
+        bind "5" { GoToTab 5; SwitchToMode "locked"; }
+        bind "6" { GoToTab 6; SwitchToMode "locked"; }
+        bind "7" { GoToTab 7; SwitchToMode "locked"; }
+        bind "8" { GoToTab 8; SwitchToMode "locked"; }
+        bind "9" { GoToTab 9; SwitchToMode "locked"; }
+    }
+
+    // -------------------------------------------------------------------------
+    // RENAME TAB MODE
+    // -------------------------------------------------------------------------
+    renametab {
+        bind "Enter" { SwitchToMode "locked"; }
+        bind "Ctrl a" "Esc" "Ctrl c" { UndoRenameTab; SwitchToMode "locked"; }
+    }
+
+    // -------------------------------------------------------------------------
+    // SCROLL MODE
+    // -------------------------------------------------------------------------
+    scroll {
+        bind "Ctrl a" "q" "Esc" "Ctrl c" { SwitchToMode "locked"; }
+        bind "/" { SwitchToMode "EnterSearch"; SearchInput 0; }
+        bind "j" "Ctrl e" "Down" { ScrollDown; }
+        bind "k" "Ctrl y" "Up"   { ScrollUp; }
+        bind "Ctrl d" "d" { HalfPageScrollDown; }
+        bind "Ctrl u" "u" { HalfPageScrollUp; }
+        bind "Ctrl f" "PageDown" { PageScrollDown; }
+        bind "Ctrl b" "PageUp"   { PageScrollUp; }
+        bind "G" { ScrollToBottom; }
+        bind "g" { ScrollToTop; }
+        bind "s" "f" "e" { EditScrollback { ansi true; }; SwitchToMode "locked"; }
+    }
+
+    // -------------------------------------------------------------------------
+    // ENTERSEARCH MODE
+    // -------------------------------------------------------------------------
+    entersearch {
+        bind "Esc" "Ctrl c" { SwitchToMode "Scroll"; }
+        bind "Ctrl a" { SwitchToMode "locked"; }
+        bind "Enter" { SwitchToMode "Search"; }
+    }
+
+    // -------------------------------------------------------------------------
+    // SEARCH MODE
+    // -------------------------------------------------------------------------
+    search {
+        bind "Ctrl a" "Ctrl c" "q" "Esc" { SwitchToMode "locked"; }
+        bind "n" { Search "up"; }
+        bind "N" { Search "down"; }
+        bind "c" { SearchToggleOption "CaseSensitivity"; }
+        bind "w" { SearchToggleOption "Wrap"; }
+        bind "o" { SearchToggleOption "WholeWord"; }
+        bind "/" { SwitchToMode "EnterSearch"; SearchInput 0; }
+        bind "j" "Down" { ScrollDown; }
+        bind "k" "Up"   { ScrollUp; }
+        bind "Ctrl d" "d" { HalfPageScrollDown; }
+        bind "Ctrl u" "u" { HalfPageScrollUp; }
+        bind "Ctrl f" { PageScrollDown; }
+        bind "Ctrl b" { PageScrollUp; }
+        bind "G" { ScrollToBottom; }
+        bind "g" { ScrollToTop; }
+        bind "s" "f" "e" { EditScrollback { ansi true; }; SwitchToMode "locked"; }
+    }
+}
+
+// -----------------------------------------------------------------------------
+// PLUGINS
+// -----------------------------------------------------------------------------
+plugins {
+    about location="zellij:about"
+    compact-bar location="zellij:compact-bar"
+    configuration location="zellij:configuration"
+    filepicker location="zellij:strider" {
+        cwd "/"
+    }
+    plugin-manager location="zellij:plugin-manager"
+    session-manager location="zellij:session-manager"
+    status-bar location="zellij:status-bar"
+    strider location="zellij:strider"
+    tab-bar location="zellij:tab-bar"
+    welcome-screen location="zellij:session-manager" {
+        welcome_screen true
+    }
+}
+
+load_plugins {
+    zellij:link
+}

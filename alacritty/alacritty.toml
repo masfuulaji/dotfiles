@@ -1,0 +1,107 @@
+[terminal.shell]
+program = "zellij"
+args = []
+
+[font]
+size = 12.0
+
+# Change family to "JetBrainsMono Nerd Font" if you have the Nerd Font variant installed
+[font.normal]
+family = "JetBrainsMono Nerd Font"
+style = "Regular"
+
+[font.bold]
+family = "JetBrainsMono Nerd Font"
+style = "Bold"
+
+[font.italic]
+family = "JetBrainsMono Nerd Font"
+style = "Italic"
+
+[window]
+opacity = 0.92
+decorations = "Full"
+
+[window.padding]
+x = 8
+y = 8
+
+[cursor]
+style         = { shape = "Beam", blinking = "On" }
+vi_mode_style = { shape = "Block", blinking = "Off" }
+
+# Tokyo Night Storm
+[colors.primary]
+background = "#24283b"
+foreground = "#c0caf5"
+
+[colors.cursor]
+text   = "#24283b"
+cursor = "#c0caf5"
+
+[colors.vi_mode_cursor]
+text   = "#24283b"
+cursor = "#7aa2f7"
+
+[colors.selection]
+text       = "#24283b"
+background = "#364a82"
+
+[colors.search.matches]
+foreground = "#24283b"
+background = "#e0af68"
+
+[colors.search.focused_match]
+foreground = "#24283b"
+background = "#7aa2f7"
+
+[colors.normal]
+black   = "#414868"
+red     = "#f7768e"
+green   = "#9ece6a"
+yellow  = "#e0af68"
+blue    = "#7aa2f7"
+magenta = "#bb9af7"
+cyan    = "#7dcfff"
+white   = "#a9b1d6"
+
+[colors.bright]
+black   = "#9399b2"
+red     = "#f7768e"
+green   = "#9ece6a"
+yellow  = "#e0af68"
+blue    = "#7aa2f7"
+magenta = "#bb9af7"
+cyan    = "#7dcfff"
+white   = "#c0caf5"
+
+[[hints.enabled]]
+regex           = "(https?://|www\\.)[^\\u0000-\\u001F\\u007F-\\u009F<>\"\\s{-}\\^⟨⟩`]+"
+command         = { program = "cmd", args = ["/c", "start", ""] }
+hyperlinks      = true
+post_processing = true
+persist         = false
+mouse           = { enabled = false }
+binding         = { key = "U", mods = "Control|Shift" }
+
+# Ctrl+V to paste
+[[keyboard.bindings]]
+key    = "V"
+mods   = "Control"
+action = "Paste"
+
+# Vi mode: Ctrl+Shift+Space to toggle
+[[keyboard.bindings]]
+key    = "Space"
+mods   = "Control|Shift"
+action = "ToggleViMode"
+
+[[keyboard.bindings]]
+key    = "Y"
+mode   = "Vi"
+action = "Copy"
+
+[[keyboard.bindings]]
+key    = "Escape"
+mode   = "Vi"
+action = "ToggleViMode"
