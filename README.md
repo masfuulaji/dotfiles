@@ -1,10 +1,14 @@
-# Dotfiles (Alacritty + Zellij for Neovim)
+# Dotfiles (Alacritty + Zellij + GlazeWM + YASB + Neovim + Starship)
 
-My terminal environment configuration for Windows & WSL, themed with **Tokyo Night Storm**.
+My desktop and terminal environment configuration for Windows & WSL, themed with **Tokyo Night Storm**.
 
 ## Included Tools
+- **Neovim**: Full LazyVim setup with Tokyo Night (transparent), Diffview, Hardtime, and Go/Delve DAP debugging.
+- **Starship**: Minimal, blazing-fast prompt with Tokyo Night Storm theme, Git status, runtime indicators, and command duration.
 - **Alacritty**: Fast GPU-accelerated terminal with Tokyo Night Storm theme.
 - **Zellij**: Terminal multiplexer configured for Neovim (starts in `locked` mode with `Ctrl + a` leader key, no pane frames, and auto-return to locked mode).
+- **GlazeWM**: Tiling window manager for Windows v3 configured with Tokyo Night borders and gaps.
+- **YASB**: Top status bar with system stats, workspace indicators, and live weather.
 
 ## Quick Setup
 

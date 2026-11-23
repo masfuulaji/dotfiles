@@ -3,32 +3,73 @@ $dotfiles = Split-Path -Parent $MyInvocation.MyCommand.Path
 
 Write-Host "Setting up dotfiles from $dotfiles..." -ForegroundColor Cyan
 
-# 1. Alacritty
-$alacrittyTarget = "$env:APPDATA\alacritty"
-if (Test-Path $alacrittyTarget) {
-    $item = Get-Item $alacrittyTarget
-    if ($item.Attributes -match "ReparsePoint") {
-        Remove-Item $alacrittyTarget -Force
-    } else {
-        Move-Item $alacrittyTarget "$env:APPDATA\alacritty_backup_$(Get-Date -Format 'yyyyMMddHHmmss')" -Force
+function Link-Directory {
+    param (
+        [string]$Name,
+        [string]$Target,
+        [string]$Source
+    )
+
+    $parent = Split-Path -Parent $Target
+    if (-not (Test-Path $parent)) {
+        New-Item -ItemType Directory -Force -Path $parent | Out-Null
     }
+
+    if (Test-Path $Target) {
+        $item = Get-Item $Target
+        if ($item.Attributes -match "ReparsePoint") {
+            Remove-Item $Target -Force
+        } else {
+            $backup = "${Target}_backup_$(Get-Date -Format 'yyyyMMddHHmmss')"
+            Move-Item $Target $backup -Force
+            Write-Host "Backed up existing $Name to $backup" -ForegroundColor Yellow
+        }
+    }
+    New-Item -ItemType Junction -Path $Target -Target $Source | Out-Null
+    Write-Host "[OK] Linked $Name -> $Source" -ForegroundColor Green
 }
-New-Item -ItemType Junction -Path $alacrittyTarget -Target "$dotfiles\alacritty" | Out-Null
-Write-Host "[OK] Linked Alacritty -> $dotfiles\alacritty" -ForegroundColor Green
+
+# Check if GlazeWM or YASB are running to safely update their directories
+$glazeRunning = Get-Process -Name glazewm -ErrorAction SilentlyContinue
+$yasbRunning = Get-Process -Name yasb -ErrorAction SilentlyContinue
+$restartWM = $false
+
+if ($glazeRunning -or $yasbRunning) {
+    Write-Host "Temporarily stopping GlazeWM / YASB to link configuration directories..." -ForegroundColor Yellow
+    Stop-Process -Name glazewm, yasb -Force -ErrorAction SilentlyContinue
+    Start-Sleep -Milliseconds 800
+    $restartWM = $true
+}
+
+# 1. Alacritty
+Link-Directory -Name "Alacritty" -Target "$env:APPDATA\alacritty" -Source "$dotfiles\alacritty"
 
 # 2. Zellij
-$zellijConfigDir = "$env:APPDATA\zellij\config"
-if (Test-Path $zellijConfigDir) {
-    $item = Get-Item $zellijConfigDir
-    if ($item.Attributes -match "ReparsePoint") {
-        Remove-Item $zellijConfigDir -Force
-    } else {
-        Move-Item $zellijConfigDir "$env:APPDATA\zellij\config_backup_$(Get-Date -Format 'yyyyMMddHHmmss')" -Force
-    }
-} else {
-    New-Item -ItemType Directory -Force -Path "$env:APPDATA\zellij" | Out-Null
+Link-Directory -Name "Zellij" -Target "$env:APPDATA\zellij\config" -Source "$dotfiles\zellij"
+
+# 3. GlazeWM
+Link-Directory -Name "GlazeWM" -Target "$env:USERPROFILE\.config\glazewm" -Source "$dotfiles\glazewm"
+
+# 4. YASB
+Link-Directory -Name "YASB" -Target "$env:USERPROFILE\.config\yasb" -Source "$dotfiles\yasb"
+
+# 5. Neovim (Windows)
+Link-Directory -Name "Neovim" -Target "$env:LOCALAPPDATA\nvim" -Source "$dotfiles\nvim"
+
+# 6. Starship
+$starshipTarget = "$env:USERPROFILE\.config\starship.toml"
+$starshipParent = Split-Path -Parent $starshipTarget
+if (-not (Test-Path $starshipParent)) { New-Item -ItemType Directory -Force -Path $starshipParent | Out-Null }
+if (Test-Path $starshipTarget) { Remove-Item $starshipTarget -Force }
+New-Item -ItemType SymbolicLink -Path $starshipTarget -Target "$dotfiles\starship\starship.toml" -ErrorAction SilentlyContinue | Out-Null
+if (-not (Test-Path $starshipTarget)) {
+    Copy-Item "$dotfiles\starship\starship.toml" $starshipTarget -Force
 }
-New-Item -ItemType Junction -Path $zellijConfigDir -Target "$dotfiles\zellij" | Out-Null
-Write-Host "[OK] Linked Zellij -> $dotfiles\zellij" -ForegroundColor Green
+Write-Host "[OK] Linked Starship -> $dotfiles\starship\starship.toml" -ForegroundColor Green
+
+if ($restartWM) {
+    Write-Host "Restarting GlazeWM (and YASB)..." -ForegroundColor Cyan
+    Start-Process glazewm -ArgumentList "start"
+}
 
 Write-Host "`nAll dotfiles successfully linked!" -ForegroundColor Green

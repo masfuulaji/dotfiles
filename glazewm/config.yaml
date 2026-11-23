@@ -1,0 +1,252 @@
+# yaml-language-server: $schema=
+#
+# GlazeWM v3 config. The SchemaStore "glazewm.json" schema that editors
+# auto-attach to this filename is written for the old pre-v3 GlazeWM (it
+# still expects a removed `bar:`/`focus_borders:` block and wrongly requires
+# 2+ items in every `commands`/`bindings` array) — the line above disables
+# it so the editor stops flagging valid v3 config as an error.
+
+general:
+  # Whether to automatically focus windows underneath the cursor. (default: false)
+  focus_follows_cursor: false
+
+  # Whether to switch back and forth between the previously focused workspace
+  # when using the `focus --workspace X` command. (default: true)
+  toggle_workspace_on_refocus: true
+
+  # Jumps the cursor to the newly focused window/monitor.
+  cursor_jump:
+    enabled: true
+    trigger: "window_focus"
+
+  # Launch/kill YASB (the status bar companion app) with the WM.
+  startup_commands: ["shell-exec yasb"]
+  shutdown_commands: ["shell-exec \"taskkill /IM yasb.exe /F\""]
+
+gaps:
+  # Gap between adjacent windows. (default: 0)
+  inner_gap: "8px"
+
+  # Gap between windows and the screen edge. Must be an object with
+  # top/right/bottom/left — a bare string fails to parse.
+  #
+  # No extra `top` gap needed for the bar here: YASB registers as a real
+  # Windows AppBar (config.yaml -> bars.primary-bar.window_flags.
+  # windows_app_bar: true), which shrinks the monitor's work area at the OS
+  # level. GlazeWM sizes workspaces off that work area (see add_monitor.rs),
+  # so it leaves room for YASB automatically — unlike Zebar, which didn't
+  # reserve space itself and needed a manual 40px top gap as a workaround.
+  outer_gap:
+    top: "4px"
+    right: "4px"
+    bottom: "4px"
+    left: "4px"
+
+window_effects:
+  focused_window:
+    border:
+      enabled: true
+      color: "#7aa2f7"
+
+  other_windows:
+    border:
+      enabled: false
+      color: "#414868"
+
+window_behavior:
+  state_defaults:
+    floating:
+      # Whether to show floating windows as always on top. (default: false)
+      shown_on_top: true
+
+    fullscreen:
+      # `maximized: true` uses native OS maximize (SW_MAXIMIZE), which
+      # respects the monitor's work area — same reason maximized windows
+      # never cover the Windows taskbar. Now that YASB reserves its space
+      # via windows_app_bar (see the outer_gap comment above), native
+      # maximize stays clipped below it too, so this no longer needs the
+      # `false` workaround that was required for Zebar.
+      maximized: true
+      shown_on_top: false
+
+workspaces:
+  - name: "1"
+    keep_alive: true
+  - name: "2"
+  - name: "3"
+  - name: "4"
+  - name: "5"
+
+window_rules:
+  # Task Manager — always float
+  - commands: ["set-floating"]
+    on: ["manage"]
+    match:
+      - window_process: { equals: "Taskmgr" }
+        window_class: { equals: "TaskManagerWindow" }
+
+  # System dialogs — float. Kept on the default `manage` + `title_change`
+  # events since these match on title text, which can be set asynchronously
+  # after the window is first created.
+  - commands: ["set-floating"]
+    match:
+      - window_title: { regex: "[Pp]roperties$" }
+      - window_title: { equals: "Run" }
+      - window_title: { equals: "Open With" }
+      - window_title: { equals: "Control Panel" }
+
+  # Calculator — float and centered
+  - commands: ["set-floating --centered"]
+    on: ["manage"]
+    match:
+      - window_process: { equals: "CalculatorApp" }
+
+  # Picture-in-picture — float and always on top
+  - commands: ["set-floating --shown-on-top"]
+    on: ["manage"]
+    match:
+      - window_title: { equals: "Picture in picture" }
+        window_class: { equals: "Chrome_WidgetWin_1" }
+
+  # Ignore these completely (don't tile them)
+  - commands: ["ignore"]
+    on: ["manage"]
+    match:
+      - window_process: { equals: "SearchHost" }
+      - window_process: { equals: "StartMenuExperienceHost" }
+      - window_process: { equals: "yasb" }
+      - window_process: { equals: "LockApp" }
+      - window_process: { equals: "ShellExperienceHost" }
+      - window_process: { equals: "winlogon" }
+
+  # Zed (and similar custom-chrome apps like Alacritty) don't set the native
+  # WS_THICKFRAME style, so GlazeWM's resizable-window check misreads them as
+  # non-resizable and auto-floats them on open. Force tiling, once, at
+  # creation only — without `on: ["manage"]` this re-fires on every
+  # `title_change` event too (e.g. every file/tab switch in Zed), which was
+  # what caused windows to jump around / re-tile unpredictably.
+  - commands: ["set-tiling"]
+    on: ["manage"]
+    match:
+      - window_process: { equals: "Zed" }
+      - window_process: { regex: "(?i)^alacritty$" }
+
+keybindings:
+  # ── Focus ──────────────────────────────────────────────────────────────
+  - commands: ["focus --direction left"]
+    bindings: ["Alt+H", "Alt+Left"]
+
+  - commands: ["focus --direction right"]
+    bindings: ["Alt+L", "Alt+Right"]
+
+  - commands: ["focus --direction up"]
+    bindings: ["Alt+K", "Alt+Up"]
+
+  - commands: ["focus --direction down"]
+    bindings: ["Alt+J", "Alt+Down"]
+
+  # ── Move ───────────────────────────────────────────────────────────────
+  - commands: ["move --direction left"]
+    bindings: ["Alt+Shift+H", "Alt+Shift+Left"]
+
+  - commands: ["move --direction right"]
+    bindings: ["Alt+Shift+L", "Alt+Shift+Right"]
+
+  - commands: ["move --direction up"]
+    bindings: ["Alt+Shift+K", "Alt+Shift+Up"]
+
+  - commands: ["move --direction down"]
+    bindings: ["Alt+Shift+J", "Alt+Shift+Down"]
+
+  # ── Resize ─────────────────────────────────────────────────────────────
+  - commands: ["resize --width -2%"]
+    bindings: ["Alt+Ctrl+H", "Alt+Ctrl+Left"]
+
+  - commands: ["resize --width +2%"]
+    bindings: ["Alt+Ctrl+L", "Alt+Ctrl+Right"]
+
+  - commands: ["resize --height +2%"]
+    bindings: ["Alt+Ctrl+K", "Alt+Ctrl+Up"]
+
+  - commands: ["resize --height -2%"]
+    bindings: ["Alt+Ctrl+J", "Alt+Ctrl+Down"]
+
+  # ── Layout ─────────────────────────────────────────────────────────────
+  # Toggle between tiling and floating
+  - commands: ["toggle-floating"]
+    bindings: ["Alt+Shift+Space"]
+
+  # Toggle fullscreen (maximized by default per window_behavior state_defaults;
+  # there's no separate "maximize" state/command in v3, so the old
+  # `toggle maximized` / Alt+X binding has no equivalent and was dropped)
+  - commands: ["toggle-fullscreen"]
+    bindings: ["Alt+F"]
+
+  # Change tiling direction (horizontal/vertical)
+  - commands: ["toggle-tiling-direction"]
+    bindings: ["Alt+V"]
+
+  # ── Workspaces ─────────────────────────────────────────────────────────
+  - commands: ["focus --workspace 1"]
+    bindings: ["Alt+1"]
+
+  - commands: ["focus --workspace 2"]
+    bindings: ["Alt+2"]
+
+  - commands: ["focus --workspace 3"]
+    bindings: ["Alt+3"]
+
+  - commands: ["focus --workspace 4"]
+    bindings: ["Alt+4"]
+
+  - commands: ["focus --workspace 5"]
+    bindings: ["Alt+5"]
+
+  # Move window to workspace
+  - commands: ["move --workspace 1"]
+    bindings: ["Alt+Shift+1"]
+
+  - commands: ["move --workspace 2"]
+    bindings: ["Alt+Shift+2"]
+
+  - commands: ["move --workspace 3"]
+    bindings: ["Alt+Shift+3"]
+
+  - commands: ["move --workspace 4"]
+    bindings: ["Alt+Shift+4"]
+
+  - commands: ["move --workspace 5"]
+    bindings: ["Alt+Shift+5"]
+
+  # Cycle through workspaces
+  - commands: ["focus --prev-workspace"]
+    bindings: ["Alt+oem_open_brackets"]
+
+  - commands: ["focus --next-workspace"]
+    bindings: ["Alt+oem_close_brackets"]
+
+  # ── Close / Reload ─────────────────────────────────────────────────────
+  # Close focused window
+  - commands: ["close"]
+    bindings: ["Alt+Shift+Q"]
+
+  # Re-evaluate config
+  - commands: ["wm-reload-config"]
+    bindings: ["Alt+Shift+R"]
+
+  # Exit GlazeWM
+  - commands: ["wm-exit"]
+    bindings: ["Alt+Shift+E"]
+
+  # ── Launch apps ────────────────────────────────────────────────────────
+  # Open terminal (Win Terminal)
+  - commands: ["shell-exec wt"]
+    bindings: ["Alt+Return"]
+
+  # Open file explorer
+  - commands: ["shell-exec explorer"]
+    bindings: ["Alt+E"]
+
+  # Open Settings
+  - commands: ["shell-exec cmd /c start ms-settings:"]
+    bindings: ["Alt+S"]

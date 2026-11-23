@@ -1,3 +1,7 @@
 *.bak
 *.old
 *backup*
+*.log
+.env
+*.env
+.env.*
