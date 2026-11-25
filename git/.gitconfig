@@ -1,0 +1,31 @@
+[core]
+    pager = delta
+
+[interactive]
+    diffFilter = delta --color-only
+
+[delta]
+    features = tokyo-night
+    navigate = true
+
+[delta "tokyo-night"]
+    dark = true
+    line-numbers = true
+    side-by-side = true
+    syntax-theme = "TwoDark"
+    plus-style = "syntax #283b4d"
+    minus-style = "syntax #3f2d3d"
+    plus-emph-style = "syntax #36546e"
+    minus-emph-style = "syntax #5a3848"
+    line-numbers-minus-style = "#f7768e"
+    line-numbers-plus-style = "#9ece6a"
+    line-numbers-left-style = "#565f89"
+    line-numbers-right-style = "#565f89"
+    hunk-header-style = "file line-number syntax"
+    hunk-header-decoration-style = "#7aa2f7 box"
+
+[merge]
+    conflictstyle = diff3
+
+[diff]
+    colorMoved = default

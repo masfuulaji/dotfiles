@@ -18,7 +18,12 @@ function Link-Directory {
     if (Test-Path $Target) {
         $item = Get-Item $Target
         if ($item.Attributes -match "ReparsePoint") {
-            Remove-Item $Target -Force
+            # Already pointing to correct source
+            if ($item.Target -eq $Source) {
+                Write-Host "[OK] Already linked $Name -> $Source" -ForegroundColor Green
+                return
+            }
+            cmd.exe /c rmdir "$Target"
         } else {
             $backup = "${Target}_backup_$(Get-Date -Format 'yyyyMMddHHmmss')"
             Move-Item $Target $backup -Force
@@ -27,18 +32,6 @@ function Link-Directory {
     }
     New-Item -ItemType Junction -Path $Target -Target $Source | Out-Null
     Write-Host "[OK] Linked $Name -> $Source" -ForegroundColor Green
-}
-
-# Check if GlazeWM or YASB are running to safely update their directories
-$glazeRunning = Get-Process -Name glazewm -ErrorAction SilentlyContinue
-$yasbRunning = Get-Process -Name yasb -ErrorAction SilentlyContinue
-$restartWM = $false
-
-if ($glazeRunning -or $yasbRunning) {
-    Write-Host "Temporarily stopping GlazeWM / YASB to link configuration directories..." -ForegroundColor Yellow
-    Stop-Process -Name glazewm, yasb -Force -ErrorAction SilentlyContinue
-    Start-Sleep -Milliseconds 800
-    $restartWM = $true
 }
 
 # 1. Alacritty
@@ -67,9 +60,27 @@ if (-not (Test-Path $starshipTarget)) {
 }
 Write-Host "[OK] Linked Starship -> $dotfiles\starship\starship.toml" -ForegroundColor Green
 
-if ($restartWM) {
-    Write-Host "Restarting GlazeWM (and YASB)..." -ForegroundColor Cyan
-    Start-Process glazewm -ArgumentList "start"
+# 7. PowerShell Profiles (Windows PowerShell 5.1 & PowerShell 7+)
+$psProfiles = @(
+    "$env:USERPROFILE\Documents\WindowsPowerShell\Microsoft.PowerShell_profile.ps1",
+    "$env:USERPROFILE\Documents\PowerShell\Microsoft.PowerShell_profile.ps1"
+)
+foreach ($prof in $psProfiles) {
+    $profDir = Split-Path -Parent $prof
+    if (-not (Test-Path $profDir)) { New-Item -ItemType Directory -Force -Path $profDir | Out-Null }
+    if (Test-Path $prof) { Remove-Item $prof -Force }
+    New-Item -ItemType SymbolicLink -Path $prof -Target "$dotfiles\powershell\Microsoft.PowerShell_profile.ps1" -ErrorAction SilentlyContinue | Out-Null
+    if (-not (Test-Path $prof)) {
+        Copy-Item "$dotfiles\powershell\Microsoft.PowerShell_profile.ps1" $prof -Force
+    }
+}
+Write-Host "[OK] Linked PowerShell Profile -> $dotfiles\powershell\Microsoft.PowerShell_profile.ps1" -ForegroundColor Green
+
+# 8. Git Config (Tokyo Night Delta & global includes)
+if (Get-Command git -ErrorAction SilentlyContinue) {
+    $gitConfigPath = "$dotfiles/git/.gitconfig".Replace('\', '/')
+    git config --global include.path "$gitConfigPath"
+    Write-Host "[OK] Configured Git include -> $gitConfigPath" -ForegroundColor Green
 }
 
 Write-Host "`nAll dotfiles successfully linked!" -ForegroundColor Green

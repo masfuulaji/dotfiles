@@ -30,4 +30,10 @@ mkdir -p ~/.config
 ln -sf "$DOTFILES_DIR/starship/starship.toml" ~/.config/starship.toml
 echo "[OK] Linked Starship -> ~/.config/starship.toml"
 
+# 5. Git Config
+if command -v git >/dev/null 2>&1; then
+    git config --global include.path "$DOTFILES_DIR/git/.gitconfig"
+    echo "[OK] Configured Git global include -> $DOTFILES_DIR/git/.gitconfig"
+fi
+
 echo -e "\nAll dotfiles successfully linked!"

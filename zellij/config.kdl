@@ -10,6 +10,7 @@
 // - Auto-lock on action: Multiplexer actions return automatically to locked mode.
 // - Ctrl+a then Ctrl+a: Passes literal Ctrl+a through to terminal.
 // - Ctrl+a then a: Toggles between active and previous tab.
+// - Direct Ctrl+h/j/k/l pane navigation in locked, normal, and tmux modes.
 // =============================================================================
 
 theme "tokyo-night-storm"
@@ -22,25 +23,31 @@ show_release_notes false
 copy_on_select true
 copy_clipboard "system"
 styled_underlines true
-support_kitty_keyboard_protocol true
+support_kitty_keyboard_protocol false
 
 keybinds clear-defaults=true {
     // -------------------------------------------------------------------------
     // LOCKED MODE (Default)
-    // Neovim receives ALL keystrokes untouched.
-    // Zellij only listens for "Ctrl a" to activate tmux/leader mode.
+    // Listens for Ctrl+h/j/k/l to switch panes, and Ctrl+a for tmux actions.
     // -------------------------------------------------------------------------
     locked {
         bind "Ctrl a" { SwitchToMode "tmux"; }
+        bind "Ctrl h" "Ctrl Left"  { MoveFocusOrTab "Left"; }
+        bind "Ctrl l" "Ctrl Right" { MoveFocusOrTab "Right"; }
+        bind "Ctrl j" "Ctrl Down"  { MoveFocus "Down"; }
+        bind "Ctrl k" "Ctrl Up"    { MoveFocus "Up"; }
     }
 
     // -------------------------------------------------------------------------
     // NORMAL MODE
-    // Fallback mode if a pane or plugin closes. Allows Ctrl+a to always work.
     // -------------------------------------------------------------------------
     normal {
         bind "Ctrl a" { SwitchToMode "tmux"; }
         bind "Esc" { SwitchToMode "locked"; }
+        bind "Ctrl h" "Ctrl Left"  { MoveFocusOrTab "Left"; }
+        bind "Ctrl l" "Ctrl Right" { MoveFocusOrTab "Right"; }
+        bind "Ctrl j" "Ctrl Down"  { MoveFocus "Down"; }
+        bind "Ctrl k" "Ctrl Up"    { MoveFocus "Up"; }
     }
 
     // -------------------------------------------------------------------------
@@ -53,11 +60,11 @@ keybinds clear-defaults=true {
         // Send Ctrl+a to the terminal (e.g. Vim increment number motion)
         bind "Ctrl a" { Write 1; SwitchToMode "locked"; }
 
-        // Panes Focus (Vim hjkl & arrows) -> returns to locked
-        bind "h" "Left"  { MoveFocus "Left"; SwitchToMode "locked"; }
-        bind "l" "Right" { MoveFocus "Right"; SwitchToMode "locked"; }
-        bind "k" "Up"    { MoveFocus "Up"; SwitchToMode "locked"; }
-        bind "j" "Down"  { MoveFocus "Down"; SwitchToMode "locked"; }
+        // Panes Focus (supports h/j/k/l, Ctrl+h/j/k/l, and arrows) -> returns to locked
+        bind "Ctrl h" "h" "Left"  { MoveFocusOrTab "Left"; SwitchToMode "locked"; }
+        bind "Ctrl l" "l" "Right" { MoveFocusOrTab "Right"; SwitchToMode "locked"; }
+        bind "Ctrl k" "k" "Up"    { MoveFocus "Up"; SwitchToMode "locked"; }
+        bind "Ctrl j" "j" "Down"  { MoveFocus "Down"; SwitchToMode "locked"; }
 
         // Move Panes (Shift + hjkl) -> returns to locked
         bind "Shift h" "H" { MovePane "Left"; SwitchToMode "locked"; }

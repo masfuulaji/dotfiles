@@ -20,7 +20,7 @@ style = "Italic"
 
 [window]
 opacity = 0.92
-decorations = "Full"
+decorations = "None"
 
 [window.padding]
 x = 8
@@ -83,6 +83,12 @@ post_processing = true
 persist         = false
 mouse           = { enabled = false }
 binding         = { key = "U", mods = "Control|Shift" }
+
+# Ctrl+Backspace sends Ctrl+W (\u0017) to delete previous word cleanly without triggering Ctrl+H
+[[keyboard.bindings]]
+key    = "Back"
+mods   = "Control"
+chars  = "\u0017"
 
 # Ctrl+V to paste
 [[keyboard.bindings]]
